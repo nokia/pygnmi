@@ -7,6 +7,7 @@
 #  History Change Log:                                                       #
 #                                                                            #
 #    1.0  [SW]  2017/06/02    first version                                  #
+#    1.1  [SW]  2017/07/06    timeout disabled (infinite subscription)       #
 #                                                                            #
 #  Objective:                                                                #
 #                                                                            #
@@ -40,15 +41,15 @@
 ##############################################################################
 
 """
-gNMI Subscribe Client in Python Version 0.12
+gNMI Subscribe Client in Python Version 1.1
 Copyright (C) 2017 Nokia. All Rights Reserved.
 """
 
 __title__ = "gNMI_Subscribe"
-__version__ = "1.0"
+__version__ = "1.1"
 __status__ = "released"
 __author__ = "Sven Wisotzky"
-__date__ = "2017 June 2nd"
+__date__ = "2017 July 6th"
 
 ##############################################################################
 
@@ -116,10 +117,18 @@ if __name__ == '__main__':
 
     group = parser.add_argument_group()
     group.add_argument('--logfile', metavar='<filename>', type=argparse.FileType('wb', 0), default='-', help='Specify the logfile (default: <stdout>)')
-    group.add_argument('--interval', default=10, type=int, help='subscription interval (default: 10s)')
-    group.add_argument('--timeout',  default=60, type=int, help='subscription duration/timeout (default: 60s)')
-
     group.add_argument('--stats', action='store_true', help='collect stats')
+
+    group = parser.add_argument_group()
+    group.add_argument('--interval', default=10, type=int, help='subscription interval (default: 10s)')
+    group.add_argument('--timeout', type=int, help='subscription duration in seconds (default: none)')
+#    group.add_argument('--heartbeat', type=int, help='heartbeat interval (default: disabled)')
+#    group.add_argument('--allow_aggregation', action='store_true', help='allow aggregation')
+#    group.add_argument('--suppress_redundant', action='store_true', help='suppress redundant')
+#    group.add_argument('--subscription_mode', default=2, type=int, help='[TARGET_DEFINED,ON_CHANGE,SAMPLE]')
+#    group.add_argument('--mode', default=0, type=int, help='[STREAM,ONCE,POLL]')
+#    group.add_argument('--encoding', default=0, type=int, help='[JSON,BYTES,PROTO,ASCII,JSON_IETF]')
+
     group.add_argument('--prefix', default='', help='gRPC path prefix (default: none)')
     group.add_argument('xpaths', nargs=argparse.REMAINDER, help='path(s) to subscriber (default: /)')
     options = parser.parse_args()
