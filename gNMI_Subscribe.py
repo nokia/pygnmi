@@ -24,10 +24,6 @@
 #                                                                            #
 #    - Disable server name verification against TLS cert (opt: noHostCheck)  #
 #    - Disable cert validation against root certificate (InsecureSkipVerify) #
-#    - Support for ON_CHANGE subscriptions                                   #
-#    - Support for POLL subscriptions                                        #
-#    - Support for option suppress_redundant                                 #
-#    - Support for client defined aliases                                    #
 #                                                                            #
 #  License:                                                                  #
 #                                                                            #
@@ -132,12 +128,11 @@ if __name__ == '__main__':
     group.add_argument('--heartbeat', type=int, help='heartbeat interval (default: none)')
     group.add_argument('--aggregate', action='store_true', help='allow aggregation')
     group.add_argument('--suppress', action='store_true', help='suppress redundant')
-    group.add_argument('--submode', default=2, type=int, help='subscription mode [TARGET_DEFINED,ON_CHANGE, SAMPLE]')
+    group.add_argument('--submode', default=2, type=int, help='subscription mode [TARGET_DEFINED, ON_CHANGE, SAMPLE]')
     group.add_argument('--mode', default=0, type=int, help='[STREAM, ONCE, POLL]')
     group.add_argument('--encoding', default=0, type=int, help='[JSON, BYTES, PROTO, ASCII, JSON_IETF]')
     group.add_argument('--qos', default=0, type=int, help='[JSON, BYTES, PROTO, ASCII, JSON_IETF]')
     group.add_argument('--use_alias',  action='store_true', help='use alias') 
-
     group.add_argument('--prefix', default='', help='gRPC path prefix (default: none)')
     group.add_argument('xpaths', nargs=argparse.REMAINDER, help='path(s) to subscriber (default: /)')
     options = parser.parse_args()
