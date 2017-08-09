@@ -7,7 +7,8 @@
 #  History Change Log:                                                       #
 #                                                                            #
 #    1.0  [SW]  2017/06/02    first version                                  #
-#    1.1  [SW]  2017/07/06    timeout disabled (infinite subscription)       #
+#    1.1  [SW]  2017/07/06    timeout behavior improved                      #
+#    1.2  [SW]  2017/08/08    logging improved, options added                #
 #                                                                            #
 #  Objective:                                                                #
 #                                                                            #
@@ -23,7 +24,6 @@
 #                                                                            #
 #    - Disable server name verification against TLS cert (opt: noHostCheck)  #
 #    - Disable cert validation against root certificate (InsecureSkipVerify) #
-#    - Support for heartbeat                                                 #
 #    - Support for ON_CHANGE subscriptions                                   #
 #    - Support for POLL subscriptions                                        #
 #    - Support for option suppress_redundant                                 #
@@ -41,15 +41,15 @@
 ##############################################################################
 
 """
-gNMI Subscribe Client in Python Version 1.1
+gNMI Subscribe Client in Python Version 1.2
 Copyright (C) 2017 Nokia. All Rights Reserved.
 """
 
-__title__ = "gNMI_Subscribe"
-__version__ = "1.1"
-__status__ = "released"
-__author__ = "Sven Wisotzky"
-__date__ = "2017 July 6th"
+__title__   = "gNMI_Subscribe"
+__version__ = "1.2"
+__status__  = "released"
+__author__  = "Sven Wisotzky"
+__date__    = "2017 August 8th"
 
 ##############################################################################
 
@@ -76,20 +76,27 @@ def list_from_path(path='/'):
                 return re.split('''/(?=(?:[^\[\]]|\[[^\[\]]+\])*$)''', path)
     return []
 
-def gen_request(xpaths, interval=10, prefix='/'):
+def gen_request( opt ):
     mysubs = []
-    for path in xpaths:
+    for path in opt.xpaths:
         path_elements = list_from_path(path)
         mypath = gnmi_pb2.Path(element=path_elements)
-        mysub = gnmi_pb2.Subscription(path=mypath, mode=2, sample_interval=interval*1000000000)
+        mysub = gnmi_pb2.Subscription(path=mypath, mode=opt.submode, suppress_redundant=opt.suppress, sample_interval=opt.interval*1000000000, heartbeat_interval=opt.heartbeat)
         mysubs.append(mysub)
 
-    if prefix:
-        pfx_elements = list_from_path(prefix)
+    if opt.prefix:
+        pfx_elements = list_from_path(opt.prefix)
         myprefix = gnmi_pb2.Path(element=pfx_elements)
-        mysubreq = gnmi_pb2.SubscribeRequest(subscribe=gnmi_pb2.SubscriptionList(prefix=myprefix, subscription=mysubs))
     else:
-        mysubreq = gnmi_pb2.SubscribeRequest(subscribe=gnmi_pb2.SubscriptionList(subscription=mysubs))
+        myprefix = None
+
+    if opt.qos:
+        myqos = gnmi_pb2.QOSMarking(marking=opt.qos)
+    else:
+        myqos = None
+
+    mysblist = gnmi_pb2.SubscriptionList(prefix=myprefix, mode=opt.mode, allow_aggregation=opt.aggregate, encoding=opt.encoding, subscription=mysubs, use_aliases=opt.use_alias, qos=myqos)
+    mysubreq = gnmi_pb2.SubscribeRequest( subscribe=mysblist )
 
     log.info('Sending SubscribeRequest\n'+str(mysubreq))
     yield mysubreq
@@ -120,14 +127,16 @@ if __name__ == '__main__':
     group.add_argument('--stats', action='store_true', help='collect stats')
 
     group = parser.add_argument_group()
-    group.add_argument('--interval', default=10, type=int, help='subscription interval (default: 10s)')
+    group.add_argument('--interval', default=10, type=int, help='sample interval (default: 10s)')
     group.add_argument('--timeout', type=int, help='subscription duration in seconds (default: none)')
-#    group.add_argument('--heartbeat', type=int, help='heartbeat interval (default: disabled)')
-#    group.add_argument('--allow_aggregation', action='store_true', help='allow aggregation')
-#    group.add_argument('--suppress_redundant', action='store_true', help='suppress redundant')
-#    group.add_argument('--subscription_mode', default=2, type=int, help='[TARGET_DEFINED,ON_CHANGE,SAMPLE]')
-#    group.add_argument('--mode', default=0, type=int, help='[STREAM,ONCE,POLL]')
-#    group.add_argument('--encoding', default=0, type=int, help='[JSON,BYTES,PROTO,ASCII,JSON_IETF]')
+    group.add_argument('--heartbeat', type=int, help='heartbeat interval (default: none)')
+    group.add_argument('--aggregate', action='store_true', help='allow aggregation')
+    group.add_argument('--suppress', action='store_true', help='suppress redundant')
+    group.add_argument('--submode', default=2, type=int, help='subscription mode [TARGET_DEFINED,ON_CHANGE, SAMPLE]')
+    group.add_argument('--mode', default=0, type=int, help='[STREAM, ONCE, POLL]')
+    group.add_argument('--encoding', default=0, type=int, help='[JSON, BYTES, PROTO, ASCII, JSON_IETF]')
+    group.add_argument('--qos', default=0, type=int, help='[JSON, BYTES, PROTO, ASCII, JSON_IETF]')
+    group.add_argument('--use_alias',  action='store_true', help='use alias') 
 
     group.add_argument('--prefix', default='', help='gRPC path prefix (default: none)')
     group.add_argument('xpaths', nargs=argparse.REMAINDER, help='path(s) to subscriber (default: /)')
@@ -145,12 +154,12 @@ if __name__ == '__main__':
         loghandler = logging.NullHandler()
         loglevel = logging.NOTSET
     else:
-        if options.verbose==0:
+        if options.verbose==None:
             logformat = '%(asctime)s,%(msecs)-3d %(message)s'
         else:
             logformat = '%(asctime)s,%(msecs)-3d %(levelname)-8s %(threadName)s %(message)s'
 
-        if options.verbose==0 or options.verbose==1:
+        if options.verbose==None or options.verbose==1:
             loglevel = logging.INFO
         else:
             loglevel = logging.DEBUG
@@ -215,7 +224,7 @@ if __name__ == '__main__':
     log.debug("Create gNMI stub")
     stub = gnmi_pb2.gNMIStub(channel)
 
-    req_iterator = gen_request(options.xpaths, options.interval, options.prefix)
+    req_iterator = gen_request( options )
     metadata = [('username',options.username), ('password', options.password)]
 
     msgs = 0
@@ -258,3 +267,4 @@ if __name__ == '__main__':
         log.info("%d update messages received", msgs)
 
 # EOF
+
