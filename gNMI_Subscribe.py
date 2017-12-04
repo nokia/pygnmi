@@ -38,15 +38,15 @@
 ##############################################################################
 
 """
-gNMI Subscribe Client in Python Version 1.2
+gNMI Subscribe Client in Python Version 1.3
 Copyright (C) 2017 Nokia. All Rights Reserved.
 """
 
 __title__   = "gNMI_Subscribe"
-__version__ = "1.2"
+__version__ = "1.3"
 __status__  = "released"
 __author__  = "Sven Wisotzky"
-__date__    = "2017 August 8th"
+__date__    = "2017 December 4th"
 
 ##############################################################################
 
