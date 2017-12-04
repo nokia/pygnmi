@@ -9,6 +9,7 @@
 #    1.0  [SW]  2017/06/02    first version                                  #
 #    1.1  [SW]  2017/07/06    timeout behavior improved                      #
 #    1.2  [SW]  2017/08/08    logging improved, options added                #
+#    1.3  [SW]  2017/12/04    support for gNMI v0.4                          #
 #                                                                            #
 #  Objective:                                                                #
 #                                                                            #
@@ -72,17 +73,28 @@ def list_from_path(path='/'):
                 return re.split('''/(?=(?:[^\[\]]|\[[^\[\]]+\])*$)''', path)
     return []
 
+
+def path_from_string(path='/'):
+    mypath = []
+
+    for e in list_from_path(path):
+        eName = e.split("[", 1)[0]
+        eKeys = re.findall('\[(.*?)\]', e)
+        dKeys = dict(x.split('=', 1) for x in eKeys)
+        mypath.append(gnmi_pb2.PathElem(name=eName, key=dKeys))
+
+    return gnmi_pb2.Path(elem=mypath)
+
+
 def gen_request( opt ):
     mysubs = []
     for path in opt.xpaths:
-        path_elements = list_from_path(path)
-        mypath = gnmi_pb2.Path(element=path_elements)
+        mypath = path_from_string(path)
         mysub = gnmi_pb2.Subscription(path=mypath, mode=opt.submode, suppress_redundant=opt.suppress, sample_interval=opt.interval*1000000000, heartbeat_interval=opt.heartbeat)
         mysubs.append(mysub)
 
     if opt.prefix:
-        pfx_elements = list_from_path(opt.prefix)
-        myprefix = gnmi_pb2.Path(element=pfx_elements)
+        myprefix = path_from_string(opt.prefix)
     else:
         myprefix = None
 
