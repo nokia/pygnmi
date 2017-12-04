@@ -16,41 +16,70 @@ $ python gNMI_Subscribe.py --help
 ## Usage Example:
 
 ```
-$ python gNMI_Subscribe.py  --server 172.20.148.52:57400 --username grpc --password NokiaGRPC --cert CAcert.pem --ciphers AES128 /state/port[port-id=1/1/1]/ethernet/statistics/out-utilization
-
-17/04/19 23:19:09,547 Sending SubscribeRequest
+$ python gNMI_Subscribe.py  --server 192.168.33.2:57400 --username grpc --password Nokia4gnmi --cert CAcert.pem --ciphers AES128 /state/port[port-id=1/1/1]/ethernet/statistics/out-utilization
+17/12/04 16:02:43,160 Sending SubscribeRequest
 subscribe {
   subscription {
     path {
-      element: "state"
-      element: "port[port-id=1/1/1]"
-      element: "ethernet"
-      element: "statistics"
-      element: "out-utilization"
+      elem {
+        name: "state"
+      }
+      elem {
+        name: "port"
+        key {
+          key: "port-id"
+          value: "1/1/1"
+        }
+      }
+      elem {
+        name: "ethernet"
+      }
+      elem {
+        name: "statistics"
+      }
+      elem {
+        name: "out-utilization"
+      }
     }
     mode: SAMPLE
     sample_interval: 10000000000
   }
 }
 
-17/04/19 23:19:19,970 Update received
+17/12/04 16:02:54,532 Update received
 update {
-  timestamp: 1492640359967583702
+  timestamp: 1512399461394858020
   prefix {
-    element: "state"
-    element: "port[port-id=1/1/1]"
-    element: "ethernet"
-    element: "statistics"
+    elem {
+      name: "state"
+    }
+    elem {
+      name: "port"
+      key {
+        key: "port-id"
+        value: "1/1/1"
+      }
+    }
+    elem {
+      name: "ethernet"
+    }
+    elem {
+      name: "statistics"
+    }
   }
   update {
     path {
-      element: "out-utilization"
+      elem {
+        name: "out-utilization"
+      }
     }
-    value {
-      value: "0"
+    val {
+      json_val: "0"
     }
   }
 }
 
-17/04/19 23:19:29,970 gNMI_Subscribe stopped by user
+
+^C
+17/12/04 16:03:04,511 gNMI_Subscribe stopped by user
 ```
