@@ -9,7 +9,7 @@ https://github.com/grpc/grpc/blob/master/INSTALL.md
 ```
 $ pip install --upgrade pip
 $ pip install grpcio
-$ wget https://raw.githubusercontent.com/openconfig/gnmi/master/proto/gnmi/gnmi_pb2.py
+$ curl -O https://raw.githubusercontent.com/openconfig/gnmi/c5b444cd3ab8af669d0b8934f47a41ed6a985cdc/proto/gnmi/gnmi_pb2.py
 $ python gNMI_Subscribe.py --help
 ```
 
