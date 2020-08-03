@@ -83,3 +83,8 @@ update {
 ^C
 17/12/04 16:03:04,511 gNMI_Subscribe stopped by user
 ```
+
+
+## License
+
+This project is licensed under the MIT license - see the [LICENSE](https://github.com/nokia/pygnmi/blob/master/LICENSE).
